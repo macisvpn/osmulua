@@ -62,24 +62,24 @@ sudo gem install lolcat
 apt-get -y install nginx php5-fpm php5-cli
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
-wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/macisvpn/osmulua/master/nginx.conf"
+wget -O /etc/nginx/nginx.conf "http://raw.github.com/MuLuu09/conf/master/nginx.conf"
 mkdir -p /home/vps/public_html
 echo "<pre>Setup by MuLuu | telegram @MuLuu09 | whatsapp +601131731782</pre>" > /home/vps/public_html/index.php
 echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
-wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/macisvpn/osmulua/master/vps.conf"
+wget -O /etc/nginx/conf.d/vps.conf "http://raw.github.com/MuLuu09/conf/master/vps.conf"
 sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
 service php5-fpm restart
 service nginx restart
 
 # install openvpn
-wget -O /etc/openvpn/openvpn.tar "https://raw.githubusercontent.com/macisvpn/osmulua/master/openvpn.tar"
+wget -O /etc/openvpn/openvpn.tar "http://raw.github.com/Qeesya/autoscript/master/script/openvpn.tar"
 cd /etc/openvpn/
 tar xf openvpn.tar
-wget -O /etc/openvpn/1194.conf "https://raw.githubusercontent.com/macisvpn/osmulua/master/1194.conf"
+wget -O /etc/openvpn/1194.conf "http://raw.github.com/Qeesya/autoscript/master/script/1194.conf"
 service openvpn restart
 sysctl -w net.ipv4.ip_forward=1
 sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
-wget -O /etc/iptables.up.rules "https://raw.githubusercontent.com/macisvpn/osmulua/master/iptables.up.rules"
+wget -O /etc/iptables.up.rules "http://raw.github.com/MuLuu09/conf/master/iptables.up.rules"
 sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
 MYIP=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | grep -v '192.168'`;
 MYIP2="s/xxxxxxxxx/$MYIP/g";
@@ -89,7 +89,7 @@ iptables-restore < /etc/iptables.up.rules
 service openvpn restart
 
 # etc
-wget -O /home/vps/public_html/client.ovpn "http://autoscriptnobita.tk/rendum/client.ovpn"
+wget -O /home/vps/public_html/client.ovpn "http://raw.github.com/Qeesya/autoscript/master/script/client.ovpn"
 sed -i $MYIP2 /home/vps/public_html/client.ovpn;
 cd
 #add useruseradd 
@@ -100,40 +100,6 @@ echo "MuLuu:12345" | chpasswd
 sed -i '/Port 22/a Port 143' /etc/ssh/sshd_config
 sed -i 's/Port 22/Port  22/g' /etc/ssh/sshd_config
 service ssh restart
-
-# install vnstat gui
-cd /home/vps/public_html/
-wget https://raw.githubusercontent.com/macisvpn/osmulua/master/vnstat_php_frontend-1.5.1.tar.gz
-tar xf vnstat_php_frontend-1.5.1.tar.gz
-rm vnstat_php_frontend-1.5.1.tar.gz
-mv vnstat_php_frontend-1.5.1 vnstat
-cd vnstat
-sed -i "s/\$iface_list = array('eth0', 'sixxs');/\$iface_list = array('eth0');/g" config.php
-sed -i "s/\$language = 'nl';/\$language = 'en';/g" config.php
-sed -i 's/Internal/Internet/g' config.php
-sed -i '/SixXS IPv6/d' config.php
-sed -i "s/\$locale = 'en_US.UTF-8';/\$locale = 'en_US.UTF+8';/g" config.php
-cd
-
-# install fail2ban
-apt-get -y install fail2ban;
-service fail2ban restart
-
-# install squid3
-apt-get -y install squid3
-wget -O /etc/squid3/squid.conf "https://raw.githubusercontent.com/macisvpn/osmulua/master/squid.conf"
-sed -i $MYIP2 /etc/squid3/squid.conf;
-service
-
-# install webmin
-cd
-wget "http://prdownloads.sourceforge.net/webadmin/webmin_1.820_all.deb"
-dpkg --install webmin_1.820_all.deb;
-apt-get -y -f install;
-rm /root/webmin_1.820_all.deb
-sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
-service webmin restart
-service vnstat restart
 
 # install dropbear
 apt-get -y install dropbear
@@ -153,13 +119,47 @@ mv /usr/sbin/dropbear /usr/sbin/dropbear1
 ln /usr/local/sbin/dropbear /usr/sbin/dropbear
 service dropbear restart
 
+# install vnstat gui
+cd /home/vps/public_html/
+wget http://raw.github.com/MuLuu09/conf/master/vnstat_php_frontend-1.5.1.tar.gz
+tar xf vnstat_php_frontend-1.5.1.tar.gz
+rm vnstat_php_frontend-1.5.1.tar.gz
+mv vnstat_php_frontend-1.5.1 vnstat
+cd vnstat
+sed -i "s/\$iface_list = array('eth0', 'sixxs');/\$iface_list = array('eth0');/g" config.php
+sed -i "s/\$language = 'nl';/\$language = 'en';/g" config.php
+sed -i 's/Internal/Internet/g' config.php
+sed -i '/SixXS IPv6/d' config.php
+sed -i "s/\$locale = 'en_US.UTF-8';/\$locale = 'en_US.UTF+8';/g" config.php
+cd
+
+# install fail2ban
+apt-get -y install fail2ban;
+service fail2ban restart
+
+# install squid3
+apt-get -y install squid3
+wget -O /etc/squid3/squid.conf "http://raw.github.com/MuLuu09/conf/master/squid.conf"
+sed -i $MYIP2 /etc/squid3/squid.conf;
+service
+
+# install webmin
+cd
+wget "http://prdownloads.sourceforge.net/webadmin/webmin_1.820_all.deb"
+dpkg --install webmin_1.820_all.deb;
+apt-get -y -f install;
+rm /root/webmin_1.820_all.deb
+sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
+service webmin restart
+service vnstat restart
+
 #swap ram
-wget https://raw.githubusercontent.com/macisvpn/osmulua/master/swap-ram.sh
+wget https://raw.githubusercontent.com/Qeesya/autoscript/master/script/swap-ram.sh
 chmod +x swap-ram.sh
 ./swap-ram.sh
 
 #bonus block torrent
-wget https://raw.githubusercontent.com/macisvpn/osmulua/master/torrent.sh
+wget https://raw.githubusercontent.com/Qeesya/autoscript/master/script/torrent.sh
 chmod +x torrent.sh
 ./torrent.sh
 
