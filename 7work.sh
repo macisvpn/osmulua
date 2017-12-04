@@ -97,7 +97,7 @@ iptables-restore < /etc/iptables.up.rules
 service openvpn restart
 
 # etc
-wget -O /home/vps/public_html/client.ovpn "http://raw.github.com/Qeesya/autoscript/master/script/client.ovpn"
+wget -O /home/vps/public_html/client.ovpn "http://autoscriptnobita.tk/rendum//client.ovpn"
 sed -i $MYIP2 /home/vps/public_html/client.ovpn;
 cd
 #add useruseradd 
