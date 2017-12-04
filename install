@@ -1,0 +1,203 @@
+#!/bin/bash
+
+# initialisasi var
+export DEBIAN_FRONTEND=noninteractive
+OS=`uname -m`;
+MYIP=$(wget -qO- ipv4.icanhazip.com);
+MYIP2="s/xxxxxxxxx/$MYIP/g";
+MYPORT="s/85/99/g";
+
+# go to root
+cd
+
+#ca-certificates
+apt-get install ca-certificates
+
+# setting port ssh
+sed -i 's/Port 22/Port 22/g' /etc/ssh/sshd_config
+sed -i '/Port 22/a Port 143' /etc/ssh/sshd_config
+service ssh restart
+
+# install dropbear
+apt-get -y install dropbear
+sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=443/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 443 -p 80"/g' /etc/default/dropbear
+echo "/bin/false" >> /etc/shells
+echo "/usr/sbin/nologin" >> /etc/shells
+service ssh restart
+service dropbear restart
+
+# install squid3
+cd
+apt-get -y install squid3
+wget -O /etc/squid3/squid.conf "https://raw.githubusercontent.com/dathai/Wedssh/master/API/squid.conf"
+sed -i $MYIP2 /etc/squid3/squid.conf;
+service squid3 restart
+
+# install webserver
+cd
+apt-get -y install nginx php5 php5-fpm php5-cli php5-mysql php5-mcrypt
+rm /etc/nginx/sites-enabled/default && rm /etc/nginx/sites-available/default
+mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.backup
+mv /etc/nginx/conf.d/vps.conf /etc/nginx/conf.d/vps.conf.backup
+wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/dathai/Wedssh/master/API/nginx.conf"
+wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/dathai/Wedssh/master/API/vps.conf"
+sed -i 's/cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php5/fpm/php.ini
+sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
+sed -i $MYPORT /etc/nginx/conf.d/vps.conf;
+useradd -m vps && mkdir -p /home/vps/public_html
+rm /home/vps/public_html/index.html && echo "<?php phpinfo() ?>" > /home/vps/public_html/info.php
+chown -R www-data:www-data /home/vps/public_html && chmod -R g+rw /home/vps/public_html
+service php5-fpm restart && service nginx restart
+
+# install myweb
+cd /home/vps/public_html/
+wget -O /home/vps/public_html/myweb.tar "https://raw.githubusercontent.com/dathai/Wedssh/master/API/myweb.tar"
+cd /home/vps/public_html/
+tar xf myweb.tar
+
+# install vnstat gui
+cd /home/vps/public_html/
+wget http://raw.github.com/MuLuu09/conf/master/vnstat_php_frontend-1.5.1.tar.gz
+tar xf vnstat_php_frontend-1.5.1.tar.gz
+rm vnstat_php_frontend-1.5.1.tar.gz
+mv vnstat_php_frontend-1.5.1 vnstat
+cd vnstat
+sed -i "s/\$iface_list = array('eth0', 'sixxs');/\$iface_list = array('eth0');/g" config.php
+sed -i "s/\$language = 'nl';/\$language = 'en';/g" config.php
+sed -i 's/Internal/Internet/g' config.php
+sed -i '/SixXS IPv6/d' config.php
+sed -i "s/\$locale = 'en_US.UTF-8';/\$locale = 'en_US.UTF+8';/g" config.php
+cd
+
+# install fail2ban
+apt-get -y install fail2ban;
+service fail2ban restart
+
+# Install Dos Deflate
+apt-get -y install dnsutils dsniff
+wget http://raw.github.com/MuLuu09/autoscript/master/ddos-deflate-master.zip
+unzip master.zip
+cd ddos-deflate-master
+./install.sh
+cd
+
+#swap ram
+wget https://raw.githubusercontent.com/Qeesya/autoscript/master/script/swap-ram.sh
+chmod +x swap-ram.sh
+./swap-ram.sh
+
+#bonus block torrent
+wget https://raw.githubusercontent.com/Qeesya/autoscript/master/script/torrent.sh
+chmod +x torrent.sh
+./torrent.sh
+
+
+# text gambar
+apt-get install boxes
+# color text
+cd
+rm -rf /root/.bashrc
+wget -O /root/.bashrc "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/.bashrc"
+# install lolcat
+sudo apt-get -y install ruby
+
+# download script
+cd
+wget -O /usr/bin/benchmark "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/benchmark.sh"
+wget -O /usr/bin/speedtest  "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/speedtest_cli.py"
+wget -O /usr/bin/ps-mem "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/ps_mem.py"
+wget -O /usr/bin/dropmon "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/dropmon.sh"
+wget -O /usr/bin/menu "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/menu"
+wget -O /usr/bin/user-active-list "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/user-active-list.sh"
+wget -O /usr/bin/user-add "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/user-add.sh"
+wget -O /usr/bin/user-add-pptp "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/user-add-pptp.sh"
+wget -O /usr/bin/user-del "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/user-del.sh"
+wget -O /usr/bin/disable-user-expire "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/disable-user-expire.sh"
+wget -O /usr/bin/delete-user-expire "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/delete-user-expire.sh"
+wget -O /usr/bin/banned-user "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/banned-user.sh"
+wget -O /usr/bin/unbanned-user "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/unbanned-user.sh"
+wget -O /usr/bin/user-expire-list "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/user-expire-list.sh"
+wget -O /usr/bin/user-gen "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/user-gen.sh"
+wget -O /usr/bin/userlimit.sh "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/userlimit.sh"
+wget -O /usr/bin/userlimitssh.sh "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/userlimitssh.sh"
+wget -O /usr/bin/user-list "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/user-list.sh"
+wget -O /usr/bin/user-login "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/user-login.sh"
+wget -O /usr/bin/user-pass "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/user-pass.sh"
+wget -O /usr/bin/user-renew "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/user-renew.sh"
+wget -O /usr/bin/clearcache.sh "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/clearcache.sh"
+wget -O /usr/bin/bannermenu "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/bannermenu"
+cd
+
+#rm -rf /etc/cron.weekly/
+#rm -rf /etc/cron.hourly/
+#rm -rf /etc/cron.monthly/
+rm -rf /etc/cron.daily/
+wget -O /root/passwd "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/passwd.sh"
+chmod +x /root/passwd
+echo "01 23 * * * root /root/passwd" > /etc/cron.d/passwd
+
+echo "*/30 * * * * root service dropbear restart" > /etc/cron.d/dropbear
+echo "00 23 * * * root /usr/bin/disable-user-expire" > /etc/cron.d/disable-user-expire
+echo "0 */12 * * * root /sbin/reboot" > /etc/cron.d/reboot
+#echo "00 01 * * * root echo 3 > /proc/sys/vm/drop_caches && swapoff -a && swapon -a" > /etc/cron.d/clearcacheram3swap
+echo "*/30 * * * * root /usr/bin/clearcache.sh" > /etc/cron.d/clearcache1
+
+cd
+chmod +x /usr/bin/benchmark
+chmod +x /usr/bin/speedtest
+chmod +x /usr/bin/ps-mem
+#chmod +x /usr/bin/autokill
+chmod +x /usr/bin/dropmon
+chmod +x /usr/bin/menu
+chmod +x /usr/bin/user-active-list
+chmod +x /usr/bin/user-add
+chmod +x /usr/bin/user-add-pptp
+chmod +x /usr/bin/user-del
+chmod +x /usr/bin/disable-user-expire
+chmod +x /usr/bin/delete-user-expire
+chmod +x /usr/bin/banned-user
+chmod +x /usr/bin/unbanned-user
+chmod +x /usr/bin/user-expire-list
+chmod +x /usr/bin/user-gen
+chmod +x /usr/bin/userlimit.sh
+chmod +x /usr/bin/userlimitssh.sh
+chmod +x /usr/bin/user-list
+chmod +x /usr/bin/user-login
+chmod +x /usr/bin/user-pass
+chmod +x /usr/bin/user-renew
+chmod +x /usr/bin/clearcache.sh
+chmod +x /usr/bin/bannermenu
+cd
+
+# Setting web
+echo -e "\033[01;31mIP User And Pass 'ROOT' Only \033[0m"
+read -p "IP : " MyIPD
+read -p "Username : " Login
+read -p "Password : " Passwd
+MYIPS="s/xxxxxxxxx/$MyIPD/g";
+US1="s/arch19user/$Login/g";
+PS2="s/arch19pass/$Passwd/g";
+sed -i $MYIPS /home/vps/public_html/index.php;
+sed -i $US1 /home/vps/public_html/index.php;
+sed -i $PS2 /home/vps/public_html/index.php;
+
+#FIGlet In Linux
+sudo apt-get install figlet
+yum install figlet
+
+#RM file
+rm -f myweb.tar
+cd
+rm -f install.sh
+
+# About
+clear
+figlet "THAI-VPN"
+echo "Script WebSSH Auto Install"
+echo "-Web Server"
+echo "-Squid Proxy Port 80,8080,3128"
+echo "Squid     :  http://$MYIP:8080"
+echo "Nginx      :  http://$MYIP:99"
+echo "Web    :  http://$MYIP:99"
